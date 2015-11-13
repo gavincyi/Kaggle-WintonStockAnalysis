@@ -7,7 +7,7 @@ from sklearn.metrics import roc_auc_score as auc
 from util import set_timer
 
 
-class Predict:
+class SimplePredict:
     def __init__(self):
         # Constants
         self.train_data_filename = '../data/train.csv'
@@ -40,12 +40,6 @@ class Predict:
         set_timer(start_time)
 
     def clean_data(self):
-        # Clean features
-        mean = self.train_data[self.features_index].sum()/self.train_data.shape[0]
-        for col in self.train_data.columns[self.features_index]:
-            self.train_data[col] = self.train_data[col].fillna(mean[col])
-            self.test_data[col] = self.test_data[col].fillna(mean[col])
-
         # Clean target
         for col in self.train_data.columns[self.returns_intraday_index]:
             self.train_data[col] = self.train_data[col].fillna(0)
@@ -55,27 +49,8 @@ class Predict:
         # Start to set run time
         start_time = set_timer()
 
-        weight = self.train_data[self.train_data.columns[self.weight_intraday_index]]
-        X = self.train_data[self.features_filtered_index]
-        y = self.train_data[self.train_data.columns[self.returns_intraday_index[0]]]
-        errors = []
-        kf = cross_validation.KFold(y.shape[0], n_folds = 3, random_state = 1)
-        clf = linear_model.LinearRegression()
-
-        for itr, icv in kf:
-            count = len(icv)
-            clf.fit(X.iloc[itr], y.iloc[itr])
-            self.predictor.append(clf)
-            # y_predict = clf.predict(X.iloc[icv])
-            # error = sum(abs(y_predict - y.iloc[icv])*weight.iloc[icv])/count
-            # errors.append(error)
-
         # Calculate run time
         set_timer(start_time)
-
-
-    def cross_validate(self):
-        print('CV running...')
 
     def predict(self):
         num_of_days = self.test_data.shape[0]
@@ -83,14 +58,9 @@ class Predict:
                                             columns=range(1, 63))
         self.test_prediction = self.test_prediction.fillna(0)
 
-        X = self.test_data[self.features_filtered_index]
-        y = pd.DataFrame()
-        for index, clf in enumerate(self.predictor):
-            y[index] = clf.predict(X)
-
-        y_final = y.mean(axis=1)
-        self.test_prediction[1] = pd.Series(y_final).values
-
+        median = self.train_data.iloc[:,147:209].median(axis = 0)
+        median = np.tile(median, (self.test_data.shape[0], 1))
+        self.test_prediction.iloc[:,:] = median
 
     def generate_prediction(self):
         # Start to set run time
