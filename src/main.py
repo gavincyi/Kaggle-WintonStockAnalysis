@@ -2,11 +2,14 @@ __author__ = 'Gavin.Chan'
 
 from linear_predict import LinearPredict
 from simple_predict import SimplePredict
+from abstract_predict import Predict, PredictTest
 
 if __name__ == '__main__':
-    test_predict = SimplePredict()
-    test_predict.get_data()
-    test_predict.clean_data()
-    test_predict.prepare_predictors()
-    test_predict.predict()
-    test_predict.generate_prediction()
+    benchmark = Predict()
+    benchmark.run_all(False)
+
+    median_predict = SimplePredict()
+    median_predict.run_all(False)
+
+    linear_predict = LinearPredict()
+    linear_predict.run_all(False)
