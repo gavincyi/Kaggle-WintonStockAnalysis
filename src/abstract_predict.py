@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 import time
 
+from sklearn import preprocessing
+
 LOG_MODE = 0
+TEST = 0
 
 class BasePredict:
     def __init__(self):
@@ -61,7 +64,29 @@ class BasePredict:
         self.test_prediction = self.test_prediction.fillna(0)
 
     def clean_data(self):
-        pass
+        # Clean features
+        median = self.train_data[self.features_index].median(axis = 0)
+        for col in self.train_data.columns[self.features_index]:
+            self.train_data[col] = self.train_data[col].fillna(median[col])
+            self.test_data[col] = self.test_data[col].fillna(median[col])
+
+        # Clean target
+        for col in self.train_data.columns[self.returns_intraday_index]:
+            self.train_data[col] = self.train_data[col].fillna(0)
+
+        encoders = {}
+        for col in self.train_data.columns[1:self.returns_prev_days_index[0]]:
+            encoders[col] = preprocessing.LabelEncoder()
+            try:
+                self.train_data[col] = encoders[col].fit_transform(self.train_data[col])
+            except:
+                print("Warning occured in col %s" % col)
+
+            if encoders[col].classes_.shape[0] < 50:
+                try:
+                    self.test_data[col] = encoders[col].transform(self.test_data[col])
+                except:
+                    print("Test data has different labels with the train data at col %s" % col)
 
     def prepare_predictors(self):
         # Predict unbatch prediction
@@ -121,4 +146,7 @@ class PredictTest(BasePredict):
 
 class Predict(PredictSubmit, PredictTest):
     def __init__(self):
-        PredictSubmit.__init__(self)
+        if TEST == 1:
+            PredictTest.__init__(self)
+        else:
+            PredictSubmit.__init__(self)

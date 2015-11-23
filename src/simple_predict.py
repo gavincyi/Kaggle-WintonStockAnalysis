@@ -7,11 +7,6 @@ from util import set_timer
 
 
 class SimplePredict(Predict):
-    def clean_data(self):
-        # Clean target
-        for col in self.train_data.columns[self.returns_intraday_index]:
-            self.train_data[col] = self.train_data[col].fillna(0)
-
     def prepare_predictors(self):
         # Predict unbatch prediction
         median = self.train_data.iloc[self.train_batch_index, self.returns_predict_index]
