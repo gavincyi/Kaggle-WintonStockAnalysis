@@ -11,16 +11,29 @@ def RunAnalysis():
 
 def RunForcast():
     benchmark = Predict()
-    benchmark.run_all(False)
+    benchmark.run_all()
 
-    median_predict = SimplePredict()
-    median_predict.run_all(False)
+    median_predict = SimplePredict(False)
+    median_predict.run_all()
+
+    mean_predict = SimplePredict(True)
+    mean_predict.run_all()
 
     linear_predict = LinearPredict()
-    linear_predict.run_all(False)
+    linear_predict.run_all()
 
-    filter_linear_predict = FilterLinearPredict()
-    filter_linear_predict.run_all(False)
+    filter_linear_predict = FilterLinearPredict(3)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(2)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(1)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(0.5)
+    filter_linear_predict.run_all()
 
 if __name__ == '__main__':
+    # RunAnalysis()
     RunForcast()

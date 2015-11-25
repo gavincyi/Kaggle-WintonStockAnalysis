@@ -9,6 +9,7 @@ from sklearn import preprocessing
 
 LOG_MODE = 0
 TEST = 0
+SUBMISSION = 0
 
 class BasePredict:
     def __init__(self):
@@ -17,7 +18,7 @@ class BasePredict:
         self.test_data_filename = ''
         self.submission_filename = ''
         self.features_index = range(1, 26)
-        self.features_filtered_index = [3,5,6,7,8,9,11,12,13,14,15,16,17,18,19,22,23,24,25,26,27]
+        self.features_filtered_index = [3,5,6,8,9,11,12,13,14,15,16,17,18,19,22,23,24,25]
         self.returns_prev_days_index = [26, 27]
         self.returns_intraday_index = range(28, 207)
         self.returns_predict_index = range(147, 209)
@@ -31,7 +32,7 @@ class BasePredict:
         self.train_data = pd.DataFrame()
         self.test_data = pd.DataFrame()
         self.test_prediction = pd.DataFrame()
-        self.predictor = []
+        self.predictors = pd.Series()
 
     @staticmethod
     def run(f):
@@ -76,15 +77,21 @@ class BasePredict:
 
         encoders = {}
         for col in self.train_data.columns[1:self.returns_prev_days_index[0]]:
+            train = self.train_data[col].values
+            if any(abs(train - train.round(0)) > 0.0001):
+                continue
+
             encoders[col] = preprocessing.LabelEncoder()
+            train = train.round(0)
+            test = self.test_data[col].values.round(0)
             try:
-                self.train_data[col] = encoders[col].fit_transform(self.train_data[col])
+                self.train_data[col] = encoders[col].fit_transform(train)
             except:
                 print("Warning occured in col %s" % col)
 
             if encoders[col].classes_.shape[0] < 50:
                 try:
-                    self.test_data[col] = encoders[col].transform(self.test_data[col])
+                    self.test_data[col] = encoders[col].transform(test)
                 except:
                     print("Test data has different labels with the train data at col %s" % col)
 
@@ -118,12 +125,12 @@ class BasePredict:
         count = abs_error.shape[0] * abs_error.shape[1]
         return abs_error.sum()/count
 
-    def run_all(self, is_predict):
+    def run_all(self):
         self.run(self.get_data)
         self.run(self.clean_data)
         self.run(self.prepare_predictors)
 
-        if is_predict:
+        if SUBMISSION:
             self.run(self.predict)
             self.run(self.generate_prediction)
 

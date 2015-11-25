@@ -12,42 +12,20 @@ class Analysis(Predict):
     def __init__(self):
         Predict.__init__(self)
 
-    def clean_data(self):
-        # Clean features
-        median = self.train_data[self.features_index].median(axis=0)
-        for col in self.train_data.columns[self.features_index]:
-            self.train_data[col] = self.train_data[col].fillna(median[col])
-            self.test_data[col] = self.test_data[col].fillna(median[col])
-
-        # Clean target
-        for col in self.train_data.columns[self.returns_intraday_index]:
-            self.train_data[col] = self.train_data[col].fillna(0)
-
-        encoders = {}
-        for col in self.train_data.columns[1:self.returns_prev_days_index[0]]:
-            encoders[col] = preprocessing.LabelEncoder()
-            try:
-                self.train_data[col] = encoders[col].fit_transform(self.train_data[col])
-            except:
-                print("Warning occurred in col %s" % col)
-
-            if encoders[col].classes_.shape[0] < 50:
-                print("Cleaning col : %s" % col)
-                try:
-                    self.test_data[col] = encoders[col].transform(self.test_data[col])
-                except:
-                    print("Test data has different labels with the train data at col %s" % col)
-
     def describe_out(self):
-        stat = pd.DataFrame(columns=['Min', 'Max', 'Mean', 'Median', 'SD', 'Skew', 'Kurt'])
-
-        for i in range(self.returns_prev_days_index[0], self.returns_next_days_index[1]+1):
+        stat_train = pd.DataFrame(columns=['Min', 'Max', 'Mean', 'Median', 'SD', 'Skew', 'Kurt'])
+        for i in range(self.features_index[0], self.returns_next_days_index[1]+1):
             data = self.train_data.iloc[:,i]
             n, min_max, mean, var, skew, kurt = stats.describe(data)
-            stat.loc[self.train_data.columns[i]] = [min_max[0], min_max[1], mean, data.median(), scipy.sqrt(var), skew, kurt]
+            stat_train.loc[self.train_data.columns[i]] = [min_max[0], min_max[1], mean, data.median(), scipy.sqrt(var), skew, kurt]
+        stat_train.to_csv('../data/stat_train.csv')
 
-        stat.to_csv('../data/stat.csv')
-
+        stat_test = pd.DataFrame(columns=['Min', 'Max', 'Mean', 'Median', 'SD', 'Skew', 'Kurt'])
+        for i in range(self.features_index[0], self.returns_predict_index[0]):
+            data = self.test_data.iloc[:,i]
+            n, min_max, mean, var, skew, kurt = stats.describe(data)
+            stat_test.loc[self.test_data.columns[i]] = [min_max[0], min_max[1], mean, data.median(), scipy.sqrt(var), skew, kurt]
+        stat_test.to_csv('../data/stat_test.csv')
 
     def describe(self, s):
         n, min_max, mean, var, skew, kurt = stats.describe(s)

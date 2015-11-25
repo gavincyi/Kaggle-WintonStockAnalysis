@@ -7,16 +7,28 @@ from util import set_timer
 
 
 class SimplePredict(Predict):
+    def __init__(self, is_mean):
+        Predict.__init__(self)
+        if is_mean:
+            self.is_mean = True
+        else:
+            self.is_mean = False
+
+
     def prepare_predictors(self):
         # Predict unbatch prediction
-        median = self.train_data.iloc[self.train_batch_index, self.returns_predict_index]
-        median = median.median(axis = 0)
-        median = np.tile(median, (len(self.train_unbatch_index), 1))
+        estimator = self.train_data.iloc[self.train_batch_index, self.returns_predict_index]
+        if self.is_mean:
+            estimator = estimator.mean(axis = 0)
+        else:
+            estimator = estimator.median(axis = 0)
+
+        estimator = np.tile(estimator, (len(self.train_unbatch_index), 1))
 
         train_unbatch_predict = pd.DataFrame(index=self.train_unbatch_index,
                                             columns=range(1, 63))
         train_unbatch_predict= train_unbatch_predict.fillna(0)
-        train_unbatch_predict.iloc[:,] = median
+        train_unbatch_predict.iloc[:,] = estimator
 
         error = self.evaluate_error(self.train_data.iloc[self.train_unbatch_index,:],
                                     train_unbatch_predict)
