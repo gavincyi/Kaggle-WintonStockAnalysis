@@ -3,7 +3,6 @@ __author__ = 'Gavin.Chan'
 from abstract_predict import Predict, PredictTest
 import pandas as pd
 import numpy as np
-from util import set_timer
 
 
 class SimplePredict(Predict):
