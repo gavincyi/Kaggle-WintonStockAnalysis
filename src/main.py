@@ -3,7 +3,7 @@ __author__ = 'Gavin.Chan'
 from linear_predict import LinearPredict, FilterLinearPredict
 from simple_predict import SimplePredict
 from abstract_predict import Predict
-from boost_predict import GradientBoostPredict
+from boost_predict import GradientBoostPredict, FilterGradientBoostPredict
 from analysis import Analysis
 
 def RunAnalysis():
@@ -20,9 +20,9 @@ def RunForcast():
     # mean_predict = SimplePredict(True)
     # mean_predict.run_all()
     #
-    # linear_predict = LinearPredict()
-    # linear_predict.run_all()
-    #
+    linear_predict = LinearPredict()
+    linear_predict.run_all()
+
     # filter_linear_predict = FilterLinearPredict(3)
     # filter_linear_predict.run_all()
     #
@@ -34,31 +34,13 @@ def RunForcast():
     #
     # filter_linear_predict = FilterLinearPredict(0.5)
     # filter_linear_predict.run_all()
+    #
+    # params = {'n_estimators': 250, 'max_depth': 3, 'min_samples_split': 1,
+    #           'learning_rate': 0.001, 'loss': 'lad'}
+    # gradient_boost = FilterGradientBoostPredict(params, 4)
+    # gradient_boost.run_all()
 
-    params = {'n_estimators': 500, 'max_depth': 3, 'min_samples_split': 1,
-              'learning_rate': 0.001, 'max_features': 2, 'loss': 'ls'}
-    gradient_boost = GradientBoostPredict(params)
-    gradient_boost.run_all()
 
-    params = {'n_estimators': 500, 'max_depth': 3, 'min_samples_split': 1,
-              'learning_rate': 0.001, 'max_features': 4, 'loss': 'ls'}
-    gradient_boost = GradientBoostPredict(params)
-    gradient_boost.run_all()
-
-    params = {'n_estimators': 500, 'max_depth': 3, 'min_samples_split': 1,
-              'learning_rate': 0.001, 'max_features': 8, 'loss': 'ls'}
-    gradient_boost = GradientBoostPredict(params)
-
-    gradient_boost.run_all()
-    params = {'n_estimators': 500, 'max_depth': 3, 'min_samples_split': 1,
-              'learning_rate': 0.001, 'loss': 'huber'}
-    gradient_boost = GradientBoostPredict(params)
-    gradient_boost.run_all()
-
-    params = {'n_estimators': 500, 'max_depth': 3, 'min_samples_split': 1,
-              'learning_rate': 0.001, 'loss': 'quantile'}
-    gradient_boost = GradientBoostPredict(params)
-    gradient_boost.run_all()
 if __name__ == '__main__':
     # RunAnalysis()
     RunForcast()

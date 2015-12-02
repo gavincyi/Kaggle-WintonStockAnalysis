@@ -1,8 +1,9 @@
 __author__ = 'Gavin.Chan'
 
-import pandas as pd
+import math
 from linear_predict import SklearnPredict
 from sklearn import ensemble, cross_validation
+from scipy import stats
 
 
 class GradientBoostPredict(SklearnPredict):
@@ -20,3 +21,16 @@ class GradientBoostPredict(SklearnPredict):
             predictor.append(clf)
 
         return predictor
+
+class FilterGradientBoostPredict(GradientBoostPredict):
+    def __init__(self, params, range):
+        GradientBoostPredict.__init__(self, params)
+        self.range = range
+
+    def batch_filter(self, X, Y):
+        n, min_max, mean, var, skew, kurt = stats.describe(Y)
+        sd = math.sqrt(var)
+        y_index = Y[(Y > mean - self.range * sd).values & (Y < mean + self.range * sd).values].index.tolist()
+        X = X.iloc[y_index, :]
+        Y = Y[y_index]
+        return X, Y

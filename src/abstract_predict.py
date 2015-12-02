@@ -65,35 +65,42 @@ class BasePredict:
         self.test_prediction = self.test_prediction.fillna(0)
 
     def clean_data(self):
+        train_data = self.train_data
+        test_data = self.test_data
+
         # Clean features
-        median = self.train_data[self.features_index].median(axis = 0)
-        for col in self.train_data.columns[self.features_index]:
-            self.train_data[col] = self.train_data[col].fillna(median[col])
-            self.test_data[col] = self.test_data[col].fillna(median[col])
+        median = train_data[self.features_index].median(axis = 0)
+        for col in train_data.columns[self.features_index]:
+            train_data[col] = train_data[col].fillna(median[col])
+            test_data[col] = test_data[col].fillna(median[col])
 
         # Clean target
-        for col in self.train_data.columns[self.returns_intraday_index]:
-            self.train_data[col] = self.train_data[col].fillna(0)
+        for col in train_data.columns[self.returns_intraday_index]:
+            train_data[col] = train_data[col].fillna(0)
 
         encoders = {}
-        for col in self.train_data.columns[1:self.returns_prev_days_index[0]]:
-            train = self.train_data[col].values
+        for col in train_data.columns[1:self.returns_prev_days_index[0]]:
+            train = train_data[col].values
             if any(abs(train - train.round(0)) > 0.0001):
                 continue
 
             encoders[col] = preprocessing.LabelEncoder()
             train = train.round(0)
-            test = self.test_data[col].values.round(0)
+            test = test_data[col].values.round(0)
             try:
-                self.train_data[col] = encoders[col].fit_transform(train)
+                train_data[col] = encoders[col].fit_transform(train)
             except:
                 print("Warning occured in col %s" % col)
 
             if encoders[col].classes_.shape[0] < 50:
                 try:
-                    self.test_data[col] = encoders[col].transform(test)
+                    test_data[col] = encoders[col].transform(test)
                 except:
                     print("Test data has different labels with the train data at col %s" % col)
+
+        self.train_data = train_data
+        self.test_data = test_data
+
 
     def prepare_predictors(self):
         # Predict unbatch prediction
@@ -124,6 +131,18 @@ class BasePredict:
         abs_error = abs_error * weight.values
         count = abs_error.shape[0] * abs_error.shape[1]
         return abs_error.sum()/count
+
+    def evaluate_error_partition(self, actual, predict):
+        weight = pd.DataFrame(index=range(0, actual.shape[0]),
+                              columns=range(1, 63))
+        abs_error = abs(actual.iloc[:,self.returns_predict_index].values - predict.values)
+        abs_error_zero = abs(actual.iloc[:,self.returns_predict_index].values)
+        weight.iloc[:,0:2]   = np.tile(actual.iloc[:,self.weight_daily_index], (2, 1)).T
+        weight.iloc[:,2:60]  = np.tile(actual.iloc[:,self.weight_intraday_index], (58, 1)).T
+        weight.iloc[:,60:62] = np.tile(actual.iloc[:,self.weight_daily_index], (2, 1)).T
+        abs_error = (abs_error * weight.values).sum(axis = 0)
+        abs_error_zero = (abs_error_zero * weight.values).sum(axis = 0)
+        return abs_error_zero - abs_error
 
     def run_all(self):
         self.run(self.get_data)
