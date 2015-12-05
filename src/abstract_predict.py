@@ -6,6 +6,7 @@ import numpy as np
 import time
 
 from sklearn import preprocessing
+from collections import Counter
 
 LOG_MODE = 0
 TEST = 0
@@ -65,8 +66,8 @@ class BasePredict:
         self.test_prediction = self.test_prediction.fillna(0)
 
     def clean_data(self):
-        train_data = self.train_data
-        test_data = self.test_data
+        train_data = self.train_data.copy(True)
+        test_data = self.test_data.copy(True)
 
         # Clean features
         median = train_data[self.features_index].median(axis = 0)
@@ -78,6 +79,7 @@ class BasePredict:
         for col in train_data.columns[self.returns_intraday_index]:
             train_data[col] = train_data[col].fillna(0)
 
+        # try to transform the values to labels
         encoders = {}
         for col in train_data.columns[1:self.returns_prev_days_index[0]]:
             train = train_data[col].values
@@ -91,12 +93,25 @@ class BasePredict:
                 train_data[col] = encoders[col].fit_transform(train)
             except:
                 print("Warning occured in col %s" % col)
+                continue
 
             if encoders[col].classes_.shape[0] < 50:
                 try:
                     test_data[col] = encoders[col].transform(test)
                 except:
                     print("Test data has different labels with the train data at col %s" % col)
+                    continue
+
+        # fill the na value with the most appeared values in the columns
+        for col in train_data.columns[1:self.returns_prev_days_index[0]]:
+            if train_data[col].dtypes == 'int32':
+                train_column_data = self.train_data[col]
+                test_column_data = self.test_data[col]
+                train_column_data_notna = train_column_data[False == train_column_data.isnull()].round(0)
+                train_column_data_notna = encoders[col].transform(train_column_data_notna)
+                most_common = Counter(train_column_data_notna).most_common(1)[0][0]
+                train_data.loc[train_column_data.isnull(),col] = most_common
+                test_data.loc[test_column_data.isnull(),col] = most_common
 
         self.train_data = train_data
         self.test_data = test_data

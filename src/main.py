@@ -23,18 +23,18 @@ def RunForcast():
     linear_predict = LinearPredict()
     linear_predict.run_all()
 
-    # filter_linear_predict = FilterLinearPredict(3)
-    # filter_linear_predict.run_all()
-    #
-    # filter_linear_predict = FilterLinearPredict(2)
-    # filter_linear_predict.run_all()
-    #
-    # filter_linear_predict = FilterLinearPredict(1)
-    # filter_linear_predict.run_all()
-    #
-    # filter_linear_predict = FilterLinearPredict(0.5)
-    # filter_linear_predict.run_all()
-    #
+    filter_linear_predict = FilterLinearPredict(3)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(2)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(1)
+    filter_linear_predict.run_all()
+
+    filter_linear_predict = FilterLinearPredict(0.5)
+    filter_linear_predict.run_all()
+
     # params = {'n_estimators': 250, 'max_depth': 3, 'min_samples_split': 1,
     #           'learning_rate': 0.001, 'loss': 'lad'}
     # gradient_boost = FilterGradientBoostPredict(params, 4)
