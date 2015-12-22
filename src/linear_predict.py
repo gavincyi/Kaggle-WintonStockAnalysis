@@ -26,37 +26,34 @@ class SklearnPredict(Predict):
             predictor = self.fit(x, y)
             self.predictors[col] = predictor
 
-        train_unbatch_predict = pd.DataFrame(index=self.train_unbatch_index,
-                                             columns=range(1, 63))
-        train_unbatch_predict = train_unbatch_predict.fillna(0)
-
-        prediction_index = range(61,63)
-        for i in range(0, Y.shape[1]):
-            y_predict = pd.DataFrame()
-            for index, clf in enumerate(self.predictors[i]):
-                y_predict[index] = clf.predict(X_unbatch)
-
-            y_final = y_predict.mean(axis=1)
-            train_unbatch_predict[prediction_index[i]] = pd.Series(y_final).values
-
+        train_unbatch_predict = self.evaluate_unbatch_error(X_unbatch)
         error = self.evaluate_error(self.train_data.iloc[self.train_unbatch_index,:],
                                     train_unbatch_predict)
         print("%s : Unbatched error = %.4f" % (self.__class__.__name__, error))
 
-    def predict(self):
-        X = self.test_data[self.features_filtered_index]
+    def evaluate_unbatch_error(self, X):
+        train_unbatch_predict = pd.DataFrame(index=range(1, X.shape[0] + 1),
+                                             columns=range(1, 63))
+        train_unbatch_predict = train_unbatch_predict.fillna(0)
 
         prediction_index = range(61,63)
-        for i in range(0, self.predictors.shape[0]):
+        for i in range(0, len(prediction_index)):
             y_predict = pd.DataFrame()
             for index, clf in enumerate(self.predictors[i]):
                 y_predict[index] = clf.predict(X)
 
             y_final = y_predict.mean(axis=1)
-            self.test_prediction[prediction_index[i]] = pd.Series(y_final).values
+            train_unbatch_predict[prediction_index[i]] = pd.Series(y_final).values
+
+        return train_unbatch_predict
+
+
+    def predict(self):
+        X = self.test_data[self.features_filtered_index]
+        self.test_prediction = self.evaluate_unbatch_error(X)
 
         mean_train = self.train_data.iloc[:, self.returns_next_days_index].mean(axis = 0)
-        mean_test = self.test_prediction[prediction_index].mean(axis = 0)
+        mean_test = self.test_prediction.iloc[:,60:62].mean(axis = 0)
         print("mean_train = \n%s" % mean_train)
         print("mean_test = \n%s" % mean_test)
 

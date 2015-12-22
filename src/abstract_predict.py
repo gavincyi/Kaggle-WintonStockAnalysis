@@ -18,16 +18,17 @@ class BasePredict:
         self.train_data_filename = ''
         self.test_data_filename = ''
         self.submission_filename = ''
-        self.features_index = range(1, 26)
+        self.features_index = list(range(1, 26))
         self.features_filtered_index = [3,5,6,8,9,11,12,13,14,15,16,17,18,19,22,23,24,25]
         self.returns_prev_days_index = [26, 27]
-        self.returns_intraday_index = range(28, 207)
-        self.returns_predict_index = range(147, 209)
+        self.returns_intraday_index = list(range(28, 207))
+        self.returns_predict_index = list(range(147, 209))
         self.returns_next_days_index = [207, 208]
         self.weight_intraday_index = 209
         self.weight_daily_index = 210
         self.train_batch_index = []
         self.train_unbatch_index = []
+        self.num_of_days = 0
 
         # Data
         self.train_data = pd.DataFrame()
@@ -60,8 +61,8 @@ class BasePredict:
         self.train_unbatch_index = range(int(count*2/3), count)
 
         # Prepare test prediction
-        num_of_days = self.test_data.shape[0]
-        self.test_prediction = pd.DataFrame(index=range(1, num_of_days + 1),
+        self.num_of_days = self.test_data.shape[0]
+        self.test_prediction = pd.DataFrame(index=range(1, self.num_of_days + 1),
                                             columns=range(1, 63))
         self.test_prediction = self.test_prediction.fillna(0)
 
