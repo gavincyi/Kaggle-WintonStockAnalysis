@@ -11,6 +11,7 @@ from collections import Counter
 LOG_MODE = 0
 TEST = 0
 SUBMISSION = 0
+IS_STANDARDIZED = 0
 
 class BasePredict:
     def __init__(self):
@@ -20,6 +21,8 @@ class BasePredict:
         self.submission_filename = ''
         self.features_index = list(range(1, 26))
         self.features_filtered_index = [3,5,6,8,9,11,12,13,14,15,16,17,18,19,22,23,24,25]
+        # self.features_filtered_index = [3,6,8,11,12,14,15,17,18,19,22,23,24,25]
+        self.catagorical_filtered_index = [5,9,13,16]
         self.returns_prev_days_index = [26, 27]
         self.returns_intraday_index = list(range(28, 207))
         self.returns_predict_index = list(range(147, 209))
@@ -88,8 +91,8 @@ class BasePredict:
                 continue
 
             encoders[col] = preprocessing.LabelEncoder()
-            train = train.round(0)
-            test = test_data[col].values.round(0)
+            train = train.astype(np.int64)
+            test = test_data[col].astype(np.int64)
             try:
                 train_data[col] = encoders[col].fit_transform(train)
             except:
@@ -105,7 +108,7 @@ class BasePredict:
 
         # fill the na value with the most appeared values in the columns
         for col in train_data.columns[1:self.returns_prev_days_index[0]]:
-            if train_data[col].dtypes == 'int32':
+            if train_data[col].dtypes == 'int32' or train_data[col].dtypes == 'int64':
                 train_column_data = self.train_data[col]
                 test_column_data = self.test_data[col]
                 train_column_data_notna = train_column_data[False == train_column_data.isnull()].round(0)
@@ -113,6 +116,13 @@ class BasePredict:
                 most_common = Counter(train_column_data_notna).most_common(1)[0][0]
                 train_data.loc[train_column_data.isnull(),col] = most_common
                 test_data.loc[test_column_data.isnull(),col] = most_common
+
+        if IS_STANDARDIZED:
+            for col in train_data.columns[1:self.returns_prev_days_index[0]]:
+                if train_data[col].dtypes != 'int32' and train_data[col].dtypes != 'int64':
+                    train_data[col] = (train_data[col] - train_data[col].mean())/train_data[col].std()
+                    train_data[col] = ((train_data[col] > 0) * 1 - (train_data[col] < 0) * 1) * train_data[col].abs()**2
+                    test_data[col] = (test_data[col] - test_data[col].mean())/test_data[col].std()
 
         self.train_data = train_data
         self.test_data = test_data
@@ -174,7 +184,7 @@ class PredictSubmit(BasePredict):
     def __init__(self):
         BasePredict.__init__(self)
         self.train_data_filename = '../data/train.csv'
-        self.test_data_filename = '../data/test.csv'
+        self.test_data_filename = '../data/test_2.csv'
         self.submission_filename = '../data/submission.csv'
 
 

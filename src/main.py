@@ -4,7 +4,7 @@ from linear_predict import LinearPredict, FilterLinearPredict
 from simple_predict import SimplePredict
 from abstract_predict import Predict
 from boost_predict import GradientBoostPredict, FilterGradientBoostPredict
-from xgboost_predict import XGBoostPredict
+from xgboost_predict import XGBoostPredict, FilterXGBoostPredict
 from analysis import Analysis
 
 def RunAnalysis():
@@ -35,6 +35,10 @@ def RunForcast():
     param = {'max_depth':3, 'eta':1.0, 'objective':'reg:linear'}
     xgboost_predict = XGBoostPredict(param)
     xgboost_predict.run_all()
+    #
+    # param = {'max_depth':3, 'eta':1.0, 'objective':'reg:linear', 'range':4}
+    # filter_xgboost_predict = FilterXGBoostPredict(param)
+    # filter_xgboost_predict.run_all()
 
 if __name__ == '__main__':
     # RunAnalysis()
